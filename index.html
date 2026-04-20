@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Adota Aí - Encontre seu novo melhor amigo</title>
+    <!-- Tailwind CSS para estilização rápida e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons para ícones bonitos -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* Estilos customizados para a animação dos cartões */
+        body {
+            overscroll-behavior-y: contain;
+            /* Previne o 'pull-to-refresh' no mobile */
+        }
+
+        .card-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            perspective: 1000px;
+        }
+
+        .swipe-card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 1.5rem;
+            background-color: white;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            transform-origin: 50% 100%;
+            will-change: transform;
+            transition: transform 0.3s ease-out;
+            /* Transição suave ao soltar */
+            touch-action: none;
+            /* Previne scroll nativo ao arrastar */
+        }
+
+        /* Classes aplicadas via JS para a animação de saída */
+        .swipe-card.animating {
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+        }
+
+        .swipe-card.swipe-left {
+            transform: translateX(-150%) rotate(-30deg) !important;
+            opacity: 0;
+        }
+
+        .swipe-card.swipe-right {
+            transform: translateX(150%) rotate(30deg) !important;
+            opacity: 0;
+        }
+
+        /* Estilos das 'carimbadas' (Curti / Passei) */
+        .stamp {
+            position: absolute;
+            top: 40px;
+            padding: 0.5rem 1rem;
+            border: 4px solid;
+            border-radius: 0.5rem;
+            font-size: 2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            opacity: 0;
+            z-index: 10;
+            transform: rotate(-15deg);
+        }
+
+        .stamp-like {
+            color: #10B981;
+            /* Verde */
+            border-color: #10B981;
+            left: 20px;
+            transform: rotate(-15deg);
+        }
+
+        .stamp-nope {
+            color: #EF4444;
+            /* Vermelho */
+            border-color: #EF4444;
+            right: 20px;
+            transform: rotate(15deg);
+        }
+
+        /* Gradiente sobre a imagem para o texto ficar legível */
+        .card-gradient {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.8) 100%);
+        }
+
+        /* Esconde a barra de rolagem mas permite scroll na aba de curtidos */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center h-screen w-full fixed inset-0">
+    <div id="view-auth" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <div class="w-full max-w-sm p-6">
+            <h1 class="text-3xl font-bold text-center text-orange-500 mb-6 flex items-center justify-center gap-2">
+                <i class="ph-fill ph-paw-print text-3xl"></i>
+                Adota Aí
+            </h1>
+
+            <!-- FORM LOGIN -->
+            <div id="form-login">
+                <input id="login-email" type="email" placeholder="Email" class="w-full mb-3 p-3 border rounded-xl">
+                <input id="login-password" type="password" placeholder="Senha"
+                    class="w-full mb-4 p-3 border rounded-xl">
+
+                <button onclick="login()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold">
+                    Entrar
+                </button>
+
+                <p class="text-sm text-center mt-4">
+                    Não tem conta?
+                    <span onclick="toggleAuth('register')" class="text-orange-500 cursor-pointer">Cadastre-se</span>
+                </p>
+            </div>
+
+            <!-- FORM CADASTRO -->
+            <div id="form-register" class="hidden">
+                <input id="register-email" type="email" placeholder="Email" class="w-full mb-3 p-3 border rounded-xl">
+                <input id="register-password" type="password" placeholder="Senha"
+                    class="w-full mb-4 p-3 border rounded-xl">
+
+                <button onclick="register()" class="w-full bg-green-500 text-white py-3 rounded-xl font-bold">
+                    Cadastrar
+                </button>
+
+                <p class="text-sm text-center mt-4">
+                    Já tem conta?
+                    <span onclick="toggleAuth('login')" class="text-green-500 cursor-pointer">Entrar</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <!-- Container principal simulando a tela de um celular -->
+    <div id="app"
+        class="hidden relative w-full max-w-md h-full sm:h-[85vh] sm:rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden sm:border sm:border-gray-200">
+
+        <!-- Header / Navegação -->
+        <header class="flex justify-between items-center p-4 border-b border-gray-100 z-20 bg-white">
+            <button id="nav-swipe" class="text-orange-500 transition-colors p-2 rounded-full hover:bg-orange-50">
+                <i class="ph-fill ph-paw-print text-3xl"></i>
+            </button>
+            <h1 class="text-xl font-bold text-gray-800 tracking-tight">Adota Aí</h1>
+            <button id="nav-liked" class="text-gray-400 transition-colors p-2 rounded-full hover:bg-red-50 relative">
+                <i class="ph-fill ph-heart text-3xl"></i>
+                <!-- Badge de notificação -->
+                <span id="liked-badge"
+                    class="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+            </button>
+        </header>
+
+        <!-- ABA 1: TELA DE SWIPE -->
+        <main id="view-swipe" class="flex-1 flex flex-col relative w-full h-full p-4 overflow-hidden">
+            <!-- Container dos Cartões -->
+            <div class="mb-3">
+                <select id="filter-species" class="p-2 border rounded">
+                    <option value="" disabled selected hidden>Espécie</option>
+                    <option value="">Todos</option>
+                    <option value="cão">Cão</option>
+                    <option value="gato">Gato</option>
+                </select>
+
+                <select id="filter-size" class="p-2 border rounded">
+                    <option value="" disabled selected hidden>Porte</option>
+                    <option value="">Todos</option>
+                    <option value="pequeno">Pequeno</option>
+                    <option value="médio">Médio</option>
+                    <option value="grande">Grande</option>
+                </select>
+
+                <button onclick="applyFilters()" class="bg-orange-500 text-white px-3 py-1 rounded">
+                    Filtrar
+                </button>
+            </div>
+            <div id="cards-container" class="card-container flex-1 mb-4 relative z-10">
+                <!-- Os cartões serão injetados aqui via JS -->
+            </div>
+
+            <!-- Botões de Ação Fixos -->
+            <div id="action-buttons" class="flex justify-center items-center gap-6 pb-4 z-10">
+                <button id="btn-nope"
+                    class="w-16 h-16 rounded-full bg-white border-2 border-red-500 text-red-500 flex items-center justify-center shadow-lg hover:bg-red-50 transition-colors active:scale-95">
+                    <i class="ph ph-x text-3xl font-bold"></i>
+                </button>
+                <button id="btn-superlike"
+                    class="w-12 h-12 rounded-full bg-white border-2 border-blue-400 text-blue-400 flex items-center justify-center shadow-lg hover:bg-blue-50 transition-colors active:scale-95">
+                    <i class="ph-fill ph-star text-2xl"></i>
+                </button>
+                <button id="btn-like"
+                    class="w-16 h-16 rounded-full bg-white border-2 border-green-500 text-green-500 flex items-center justify-center shadow-lg hover:bg-green-50 transition-colors active:scale-95">
+                    <i class="ph-fill ph-heart text-3xl"></i>
+                </button>
+            </div>
+
+            <!-- Mensagem de quando os pets acabarem -->
+            <div id="empty-state"
+                class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-white z-0 hidden">
+                <i class="ph-fill ph-check-circle text-6xl text-orange-400 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Você viu todos!</h2>
+                <p class="text-gray-500 mb-6">Não há mais pets na sua região no momento. Volte mais tarde para ver novos
+                    peludos.</p>
+                <button onclick="resetApp()"
+                    class="px-6 py-3 bg-orange-500 text-white font-bold rounded-full shadow-lg hover:bg-orange-600 active:scale-95 transition-transform">
+                    Ver Novamente
+                </button>
+            </div>
+        </main>
+
+        <!-- ABA 2: TELA DE CURTIDOS (Matches) -->
+        <main id="view-liked" class="flex-1 hidden flex-col w-full h-full bg-gray-50 overflow-y-auto no-scrollbar">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Seus Matches</h2>
+                <p class="text-gray-500 text-sm mb-6">Estes são os pets que você demonstrou interesse. Clique neles para
+                    iniciar o processo de adoção com a ONG.</p>
+
+                <!-- Grid de Pets Curtidos -->
+                <div id="liked-grid" class="grid grid-cols-2 gap-4">
+                    <!-- Cards curtidos injetados aqui -->
+                </div>
+
+                <!-- Mensagem se não houver curtidas -->
+                <div id="no-likes" class="flex flex-col items-center justify-center py-10 text-center text-gray-400">
+                    <i class="ph ph-heart-break text-5xl mb-2"></i>
+                    <p>Você ainda não curtiu nenhum pet.</p>
+                </div>
+            </div>
+        </main>
+
+    </div>
+    <!-- MODAL DE DETALHES DO PET -->
+    <div id="pet-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+        <div class="bg-white w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl">
+
+            <!-- Imagem -->
+            <div class="relative h-64">
+                <img id="modal-img" class="w-full h-full object-cover">
+
+                <!-- Botão fechar -->
+                <button onclick="closeModal()"
+                    class="absolute top-3 right-3 bg-white/90 rounded-full w-10 h-10 flex items-center justify-center shadow">
+                    ✕
+                </button>
+
+                <!-- Nome sobre imagem -->
+                <div class="absolute bottom-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
+                    <h2 id="modal-name" class="text-2xl font-bold"></h2>
+                    <p id="modal-breed" class="text-sm text-gray-200"></p>
+                </div>
+            </div>
+
+            <!-- Conteúdo -->
+            <div class="p-4 space-y-3">
+
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span id="modal-age"></span>
+                    <span id="modal-city"></span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="bg-gray-100 p-2 rounded-xl">
+                        🐾 Porte: <span id="modal-size"></span>
+                    </div>
+                    <div class="bg-gray-100 p-2 rounded-xl">
+                        ⚡ Energia: <span id="modal-energy"></span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 p-3 rounded-xl text-sm">
+                    <strong>Saúde:</strong>
+                    <p id="modal-medical" class="text-gray-700"></p>
+                </div>
+
+                <div class="text-sm text-gray-700">
+                    <strong>Sobre:</strong>
+                    <p id="modal-desc"></p>
+                </div>
+
+                <button onclick="fakeAdoptionAction()"
+                    class="w-full mt-2 bg-orange-500 text-white py-3 rounded-xl font-bold active:scale-95">
+                    Tenho interesse em adotar 🧡
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        // Banco de dados simulado (MOCK)
+        const dbDogs = [
+            {
+                id: 1,
+                name: "Caramelo",
+                age: "2 anos",
+                breed: "Sem Raça Definida",
+                city: "Itapetininga",
+                img: "https://revistaoeste.com/oestegeral/wp-content/uploads/2025/06/cachorro-caramelo_1749242700989.jpg",
+                desc: "Clássico brasileiro. Cheio de energia, muito carinhoso e amigável",
+                size: "médio",
+                energy: "alta",
+                species: "cão",
+                medical: "vacinado e castrado"
+
+            },
+            {
+                id: 2,
+                name: "Luna",
+                age: "6 meses",
+                breed: "Labrador Mix",
+                city: "Tatuí",
+                species: "cão",
+                size: "grande",
+                energy: "alta",
+                medical: "Vacinada, vermifugada",
+                img: "https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=600&auto=format&fit=crop",
+                desc: "Filhote aprendendo a fazer xixi no lugar certo. Muito dócil e se dá bem com crianças."
+            },
+            {
+                id: 3,
+                name: "Thor",
+                age: "4 anos",
+                breed: "Pitbull",
+                city: "Itararé",
+                species: "cão",
+                size: "grande",
+                energy: "média",
+                medical: "Castrado e vacinado",
+                img: "https://media.istockphoto.com/id/1370010790/photo/pit-bull-dog-playing-and-having-fun-in-the-park-green-grass-wooden-stakes-around-selective.jpg?s=612x612&w=0&k=20&c=2BhKHzjGSTauuMVtrjEx6aDQrACAPV7iZ2ExQtxArzs=",
+                desc: "Um gigante bobão. Muito preguiçoso e adora um sofá."
+            },
+            {
+                id: 4,
+                name: "Nina",
+                age: "1 ano",
+                breed: "Poodle Mix",
+                city: "Barão de Antonina",
+                species: "cão",
+                size: "pequeno",
+                energy: "baixa",
+                medical: "Vacinada e saudável",
+                img: "https://www.keystonepuppies.com/wp-content/uploads/2025/10/Poodle-Mix2.jpg",
+                desc: "Pequenina, ideal para apartamento. Um pouco tímida no começo, mas depois é puro chamego."
+            },
+            {
+                id: 5,
+                name: "Bidu",
+                age: "3 anos",
+                breed: "Beagle",
+                city: "Alambari",
+                species: "cão",
+                size: "médio",
+                energy: "alta",
+                medical: "Vacinado e ativo",
+                img: "https://www.zooplus.pt/magazine/wp-content/uploads/2018/06/beagle_2.webp",
+                desc: "Curioso e fujão. Precisa de uma casa com muros altos. Excelente companheiro para caminhadas."
+            }
+        ];
+
+        // Estado do App
+        let dogsList = [...dbDogs];
+        let likedDogs = [];
+
+        // Elementos DOM
+        const cardsContainer = document.getElementById('cards-container');
+        const emptyState = document.getElementById('empty-state');
+        const likedGrid = document.getElementById('liked-grid');
+        const noLikesMsg = document.getElementById('no-likes');
+        const likedBadge = document.getElementById('liked-badge');
+
+        // Elementos de Navegação
+        const viewSwipe = document.getElementById('view-swipe');
+        const viewLiked = document.getElementById('view-liked');
+        const navSwipeBtn = document.getElementById('nav-swipe');
+        const navLikedBtn = document.getElementById('nav-liked');
+
+        // Variáveis para física do Swipe
+        let isDragging = false;
+        let startX = 0, startY = 0, currentX = 0, currentY = 0;
+        let topCard = null;
+
+        // Inicialização
+        function initApp() {
+            renderCards();
+            setupNavigation();
+            setupActionButtons();
+        }
+
+        // Cria a estrutura HTML de um cartão
+        function createCardElement(dog, index) {
+            const card = document.createElement('div');
+            card.className = 'swipe-card shadow-xl';
+            // Ajusta o z-index para empilhar corretamente
+            card.style.zIndex = dogsList.length - index;
+
+            card.addEventListener('click', () => {
+                showDetails(dog);
+            });
+
+            // Efeito visual 3D para as cartas de trás
+            if (index > 0) {
+                card.style.transform = `scale(${1 - (index * 0.05)}) translateY(${index * 15}px)`;
+            }
+
+            card.innerHTML = `
+                <!-- Selos de Curti / Passei (Invisíveis no começo) -->
+                <div class="stamp stamp-like border-green-500 text-green-500">Curti</div>
+                <div class="stamp stamp-nope border-red-500 text-red-500">Passei</div>
+                
+                <!-- Imagem -->
+                <img src="${dog.img}" alt="${dog.name}" class="w-full h-full object-cover select-none pointer-events-none">
+                
+                <!-- Informações (Gradiente sobre a imagem) -->
+                <div class="absolute bottom-0 w-full p-6 text-white card-gradient pb-8">
+                    <div class="flex justify-between items-end mb-2">
+                        <div>
+                            <h2 class="text-3xl font-bold leading-tight">${dog.name}, <span class="text-2xl font-normal">${dog.age}</span></h2>
+                            <p class="flex items-center text-sm font-medium mt-1 text-gray-200">
+                                <i class="ph-fill ph-dog mr-1"></i> ${dog.breed}
+                            </p>
+                        </div>
+                        <button class="bg-white/20 p-2 rounded-full backdrop-blur-sm">
+                            <i class="ph ph-info text-2xl"></i>
+                        </button>
+                    </div>
+                    <p class="flex items-center text-sm font-medium mb-3 text-orange-200">
+                        <i class="ph-fill ph-map-pin mr-1"></i> ${dog.city} • ${dog.distance || ''}
+                    </p>
+                    <p class="text-sm line-clamp-2 text-gray-200 bg-black/20 p-3 rounded-xl backdrop-blur-sm">${dog.desc}</p>
+                </div>
+            `;
+            return card;
+        }
+
+        let users = [];
+
+        // Alternar entre login e cadastro
+        function toggleAuth(type) {
+            document.getElementById('form-login').classList.toggle('hidden', type === 'register');
+            document.getElementById('form-register').classList.toggle('hidden', type === 'login');
+        }
+
+        // LOGIN
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                enterApp();
+            } else {
+                alert("Email ou senha incorretos!");
+            }
+        }
+
+        // CADASTRO
+        function register() {
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            if (!email || !password) {
+                alert("Preencha todos os campos!");
+                return;
+            }
+
+            // Verifica se já existe usuário
+            const userExists = users.find(u => u.email === email);
+
+            if (userExists) {
+                alert("Esse email já está cadastrado!");
+                return;
+            }
+
+            // Cria usuário
+            const newUser = { email, password };
+            users.push(newUser);
+
+            // 🔥 LOGIN AUTOMÁTICO
+            enterApp();
+        }
+
+        // ENTRAR NO APP
+        function enterApp() {
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        }
+
+        function showDetails(dog) {
+            document.getElementById('modal-img').src = dog.img;
+            document.getElementById('modal-name').textContent = dog.name;
+            document.getElementById('modal-breed').textContent = dog.breed;
+
+            document.getElementById('modal-age').textContent = `Idade: ${dog.age}`;
+            document.getElementById('modal-city').textContent = `📍 ${dog.city}`;
+            document.getElementById('modal-size').textContent = dog.size;
+            document.getElementById('modal-energy').textContent = dog.energy;
+            document.getElementById('modal-medical').textContent = dog.medical;
+            document.getElementById('modal-desc').textContent = dog.desc;
+
+            document.getElementById('pet-modal').classList.remove('hidden');
+            document.getElementById('pet-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('pet-modal').classList.add('hidden');
+            document.getElementById('pet-modal').classList.remove('flex');
+        }
+
+        function fakeAdoptionAction() {
+            closeModal();
+
+            alert("Sua solicitação foi enviada para a ONG 🧡 Em breve entrarão em contato!");
+        }
+
+        // Renderiza as cartas no DOM
+        function renderCards() {
+            cardsContainer.innerHTML = ''; // Limpa container
+
+            if (dogsList.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Pega no máximo os 3 primeiros para não pesar o DOM
+            const visibleDogs = dogsList.slice(0, 3);
+
+            // Renderiza de trás para frente para o index 0 ficar no topo
+            [...visibleDogs].reverse().forEach((dog, reversedIndex) => {
+                const index = visibleDogs.length - 1 - reversedIndex;
+                const card = createCardElement(dog, index);
+                cardsContainer.appendChild(card);
+            });
+
+            // Atualiza a referência do card do topo
+            topCard = cardsContainer.lastElementChild;
+
+            if (topCard) {
+                setupDragEvents(topCard);
+            }
+        }
+
+        function applyFilters() {
+            const species = document.getElementById('filter-species').value;
+            const size = document.getElementById('filter-size').value;
+
+            dogsList = dbDogs.filter(dog => {
+                return (!species || dog.species === species) &&
+                    (!size || dog.size === size);
+            });
+
+            renderCards();
+        }
+
+        // --- LÓGICA DE DRAG & DROP (SWIPE) ---
+
+        function setupDragEvents(card) {
+            // Mouse
+            card.addEventListener('mousedown', handleDragStart);
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('mouseup', handleDragEnd);
+
+            // Touch
+            card.addEventListener('touchstart', handleDragStart, { passive: false });
+            document.addEventListener('touchmove', handleDragMove, { passive: false });
+            document.addEventListener('touchend', handleDragEnd);
+        }
+
+        function removeDragEvents() {
+            document.removeEventListener('mousemove', handleDragMove);
+            document.removeEventListener('mouseup', handleDragEnd);
+            document.removeEventListener('touchmove', handleDragMove);
+            document.removeEventListener('touchend', handleDragEnd);
+        }
+
+        function handleDragStart(e) {
+            if (!topCard) return;
+            isDragging = true;
+
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            startX = clientX;
+            startY = clientY;
+
+            // Remove a transição suave para que o card acompanhe o dedo imediatamente
+            topCard.style.transition = 'none';
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging || !topCard) return;
+
+            // Previne scroll acidental
+            if (e.type.includes('touch')) e.preventDefault();
+
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            currentX = clientX - startX;
+            currentY = clientY - startY;
+
+            // Lógica de rotação e movimento
+            const rotate = currentX * 0.1; // Rotação sutil baseada no movimento X
+            topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotate}deg)`;
+
+            // Controle da opacidade dos carimbos (Stamps)
+            const likeStamp = topCard.querySelector('.stamp-like');
+            const nopeStamp = topCard.querySelector('.stamp-nope');
+
+            // Opacidade máxima atinge 1 quando arrasta 100px
+            const opacity = Math.min(Math.abs(currentX) / 100, 1);
+
+            if (currentX > 0) {
+                likeStamp.style.opacity = opacity;
+                nopeStamp.style.opacity = 0;
+            } else {
+                nopeStamp.style.opacity = opacity;
+                likeStamp.style.opacity = 0;
+            }
+        }
+
+        function handleDragEnd() {
+            if (!isDragging || !topCard) return;
+            isDragging = false;
+
+            // Restaura a transição
+            topCard.style.transition = 'transform 0.3s ease-out';
+
+            // Define limite (Threshold) para considerar um swipe efetivo
+            const threshold = window.innerWidth * 0.25;
+
+            if (currentX > threshold) {
+                // Swipe Direita (LIKE)
+                executeSwipe('right');
+            } else if (currentX < -threshold) {
+                // Swipe Esquerda (NOPE)
+                executeSwipe('left');
+            } else {
+                // Não atingiu limite, volta pro centro
+                resetCardPosition();
+            }
+
+            // Reseta variáveis
+            currentX = 0;
+            currentY = 0;
+        }
+
+        function resetCardPosition() {
+            topCard.style.transform = 'translate(0px, 0px) rotate(0deg)';
+            topCard.querySelector('.stamp-like').style.opacity = 0;
+            topCard.querySelector('.stamp-nope').style.opacity = 0;
+        }
+
+        function executeSwipe(direction) {
+            removeDragEvents(); // Remove eventos para evitar bugs na animação
+
+            const cardToSwipe = topCard;
+            const currentDog = dogsList[0]; // Pega o cachorro atual do array
+
+            // Adiciona classe de animação de saída
+            cardToSwipe.classList.add('animating');
+            cardToSwipe.classList.add(`swipe-${direction}`);
+
+            // Lógica de negócio
+            if (direction === 'right') {
+                addToLiked(currentDog);
+                // Pode adicionar um efeito visual de coração aqui
+            }
+
+            // Remove o cachorro do array ativo
+            dogsList.shift();
+
+            // Espera a animação terminar para remover do DOM e renderizar o próximo
+            setTimeout(() => {
+                if (cardToSwipe.parentNode) cardToSwipe.parentNode.removeChild(cardToSwipe);
+                renderCards();
+            }, 300); // 300ms combina com o CSS da classe .animating
+        }
+
+        // --- FUNCIONALIDADES DE BOTÕES E LISTA ---
+
+        function setupActionButtons() {
+            document.getElementById('btn-nope').addEventListener('click', () => {
+                if (dogsList.length > 0) executeSwipe('left');
+            });
+
+            document.getElementById('btn-like').addEventListener('click', () => {
+                if (dogsList.length > 0) executeSwipe('right');
+            });
+
+            // Superlike apenas remove da lista para este protótipo (pode ter animação pra cima futuramente)
+            document.getElementById('btn-superlike').addEventListener('click', () => {
+                if (dogsList.length > 0) {
+                    topCard.style.transition = 'transform 0.5s ease-out, opacity 0.5s ease-out';
+                    topCard.style.transform = 'translateY(-150%) !important';
+                    topCard.style.opacity = '0';
+                    executeSwipe('up'); // Simula a saída
+                    addToLiked(dogsList[0]); // Considera superlike como like
+                }
+            });
+        }
+
+        function addToLiked(dog) {
+            likedDogs.push(dog);
+            updateLikedView();
+            updateBadge();
+        }
+
+        function updateBadge() {
+            if (likedDogs.length > 0) {
+                likedBadge.textContent = likedDogs.length;
+                likedBadge.classList.remove('hidden');
+
+                // Animação no ícone ao receber curtida
+                navLikedBtn.classList.add('text-red-500', 'scale-110');
+                setTimeout(() => {
+                    if (viewSwipe.classList.contains('flex')) {
+                        navLikedBtn.classList.remove('text-red-500', 'scale-110');
+                    }
+                }, 300);
+            } else {
+                likedBadge.classList.add('hidden');
+            }
+        }
+
+        function updateLikedView() {
+            if (likedDogs.length === 0) {
+                noLikesMsg.classList.remove('hidden');
+                likedGrid.innerHTML = '';
+            } else {
+                noLikesMsg.classList.add('hidden');
+                likedGrid.innerHTML = likedDogs.map(dog => `
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer hover:shadow-md transition-shadow active:scale-95">
+                        <div class="h-40 relative">
+                            <img src="${dog.img}" class="w-full h-full object-cover">
+                            <div class="absolute bottom-2 left-2 bg-white/90 backdrop-blur text-xs font-bold px-2 py-1 rounded-full text-green-600 flex items-center shadow-sm">
+                                <i class="ph-fill ph-check-circle mr-1"></i> Match
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <h3 class="font-bold text-gray-800">${dog.name}</h3>
+                            <p class="text-xs text-gray-500 truncate">${dog.breed}</p>
+                            <button class="mt-3 w-full bg-orange-50 text-orange-600 text-sm font-bold py-2 rounded-xl flex justify-center items-center">
+                                <i class="ph ph-chat-circle mr-2"></i> Mensagem
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // --- NAVEGAÇÃO ENTRE ABAS ---
+
+        function setupNavigation() {
+            navSwipeBtn.addEventListener('click', () => switchTab('swipe'));
+            navLikedBtn.addEventListener('click', () => switchTab('liked'));
+        }
+
+        function switchTab(tab) {
+            if (tab === 'swipe') {
+                viewSwipe.classList.remove('hidden');
+                viewSwipe.classList.add('flex');
+                viewLiked.classList.add('hidden');
+                viewLiked.classList.remove('flex');
+
+                // Estilo dos botões da NAV
+                navSwipeBtn.classList.add('text-orange-500');
+                navSwipeBtn.classList.remove('text-gray-400');
+                navLikedBtn.classList.add('text-gray-400');
+                navLikedBtn.classList.remove('text-red-500');
+            } else {
+                viewSwipe.classList.add('hidden');
+                viewSwipe.classList.remove('flex');
+                viewLiked.classList.remove('hidden');
+                viewLiked.classList.add('flex');
+
+                // Estilo dos botões da NAV
+                navSwipeBtn.classList.remove('text-orange-500');
+                navSwipeBtn.classList.add('text-gray-400');
+                navLikedBtn.classList.remove('text-gray-400');
+                navLikedBtn.classList.add('text-red-500');
+            }
+        }
+
+        // Reinicia o app para testes
+        function resetApp() {
+            // Restaura lista original
+            dogsList = [...dbDogs];
+
+            // (opcional mas recomendado) limpa curtidos
+            likedDogs = [];
+            updateLikedView();
+            updateBadge();
+
+            // esconde tela de vazio
+            emptyState.classList.add('hidden');
+
+            // volta swipe ao estado normal
+            switchTab('swipe');
+
+            // recria cards
+            renderCards();
+
+            // garante reset de variáveis do swipe
+            isDragging = false;
+            currentX = 0;
+            currentY = 0;
+            topCard = null;
+        }
+
+        // Inicia o App
+        initApp();
+
+    </script>
+</body>
+
+</html>
