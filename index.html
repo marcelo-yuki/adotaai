@@ -161,6 +161,30 @@
             <option value="casa_quintal">Casa com quintal</option>
         </select>
 
+        <label class="font-semibold">Nível de atividade</label>
+        <select id="p-activity" class="mb-4 p-3 border rounded-xl w-full">
+            <option value="">Selecione</option>
+            <option value="sedentario">Sedentário</option>
+            <option value="moderado">Moderado</option>
+            <option value="ativo">Ativo</option>
+        </select>
+
+        <label class="font-semibold">Idade do pet</label>
+        <select id="p-age" class="mb-4 p-3 border rounded-xl w-full">
+            <option value="">Todos</option>
+            <option value="filhote">Filhote</option>
+            <option value="adulto">Adulto</option>
+            <option value="idoso">Idoso</option>
+        </select>
+
+        <label class="font-semibold">Temperamento desejado</label>
+        <select id="p-temperament" class="mb-4 p-3 border rounded-xl w-full">
+            <option value="">Todos</option>
+            <option value="calmo">Calmo</option>
+            <option value="brincalhao">Brincalhão</option>
+            <option value="independente">Independente</option>
+        </select>
+
         <!-- ROTINA -->
         <label class="font-semibold">Rotina</label>
         <select id="p-routine" class="mb-4 p-3 border rounded-xl w-full">
@@ -197,6 +221,24 @@
             <option value="grande">Grande</option>
         </select>
 
+        <label class="font-semibold">Tem alergia?</label>
+        <select id="p-allergy" class="mb-4 p-3 border rounded-xl w-full">
+            <option value="">Não</option>
+            <option value="sim">Sim</option>
+        </select>
+
+        <label class="font-semibold">Tem crianças?</label>
+        <select id="p-kids" class="mb-4 p-3 border rounded-xl w-full">
+            <option value="">Não</option>
+            <option value="sim">Sim</option>
+        </select>
+
+        <label class="font-semibold">Já possui outro pet?</label>
+        <select id="p-otherPets" class="mb-6 p-3 border rounded-xl w-full">
+            <option value="">Não</option>
+            <option value="sim">Sim</option>
+        </select>
+
         <button onclick="saveProfile()" class="bg-orange-500 text-white w-full py-3 rounded-xl font-bold">
             Continuar
         </button>
@@ -222,25 +264,55 @@
         <!-- ABA 1: TELA DE SWIPE -->
         <main id="view-swipe" class="flex-1 flex flex-col relative w-full h-full p-4 overflow-hidden">
             <!-- Container dos Cartões -->
-            <div class="mb-3">
-                <select id="filter-species" class="p-2 border rounded">
-                    <option value="" disabled selected hidden>Espécie</option>
-                    <option value="">Todos</option>
-                    <option value="cão">Cão</option>
-                    <option value="gato">Gato</option>
-                </select>
-
-                <select id="filter-size" class="p-2 border rounded">
-                    <option value="" disabled selected hidden>Porte</option>
-                    <option value="">Todos</option>
-                    <option value="pequeno">Pequeno</option>
-                    <option value="médio">Médio</option>
-                    <option value="grande">Grande</option>
-                </select>
-
-                <button onclick="applyFilters()" class="bg-orange-500 text-white px-3 py-1 rounded">
-                    Filtrar
+            <div class="px-4 mb-2 z-30">
+                <button onclick="toggleFilterMenu()"
+                    class="w-full flex items-center justify-between bg-white border border-gray-200 p-3 rounded-xl shadow-sm text-gray-700 font-medium">
+                    <span class="flex items-center gap-2"><i class="ph ph-sliders"></i> Filtros de Busca</span>
+                    <i id="filter-icon" class="ph ph-caret-down"></i>
                 </button>
+
+                <div id="filter-menu"
+                    class="hidden mt-2 bg-white border border-gray-200 rounded-2xl p-4 shadow-xl space-y-4 absolute left-4 right-4 z-40">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">Espécie</label>
+                            <select id="filter-species" class="w-full p-2 bg-gray-50 border-none rounded-lg text-sm">
+                                <option value="">Todos</option>
+                                <option value="cão">Cachorros</option>
+                                <option value="gato">Gatos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">Porte</label>
+                            <select id="filter-size" class="w-full p-2 bg-gray-50 border-none rounded-lg text-sm">
+                                <option value="">Todos</option>
+                                <option value="pequeno">Pequeno</option>
+                                <option value="médio">Médio</option>
+                                <option value="grande">Grande</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">Temperamento</label>
+                            <select id="filter-temp" class="w-full p-2 bg-gray-50 border-none rounded-lg text-sm">
+                                <option value="">Todos</option>
+                                <option value="calmo">Calmo</option>
+                                <option value="brincalhão">Brincalhão</option>
+                                <option value="ativo">Ativo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">Compatibilidade</label>
+                            <select id="filter-kids" class="w-full p-2 bg-gray-50 border-none rounded-lg text-sm">
+                                <option value="">Indiferente</option>
+                                <option value="true">Bom p/ crianças</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="applyFilters()"
+                        class="w-full bg-orange-500 text-white py-2 rounded-xl font-bold shadow-lg shadow-orange-200">
+                        Aplicar Filtros
+                    </button>
+                </div>
             </div>
             <div id="cards-container" class="card-container flex-1 mb-4 relative z-10">
                 <!-- Os cartões serão injetados aqui via JS -->
@@ -354,6 +426,43 @@
 
     <!-- Lógica JavaScript -->
     <script>
+
+        let users = JSON.parse(localStorage.getItem("users")) || [];
+        let userProfile = JSON.parse(localStorage.getItem('profile')) || null;
+        let likedDogs = [];
+        let isDragging = false;
+        let startX = 0, startY = 0, currentX = 0, currentY = 0;
+        let topCard = null;
+
+        const MATCH_WEIGHTS = {
+            species: 30,
+            size: 20,
+            temperament: 25,
+            kids: 15,
+            pets: 10
+        };
+
+
+        function enrichPet(pet) {
+            // idade em meses/anos simples para categoria
+            const ageNumber = parseInt(pet.age);
+
+            let ageCategory = "adulto";
+            if (pet.age.includes("mes")) ageCategory = "filhote";
+            if (ageNumber >= 7) ageCategory = "idoso";
+
+            return {
+                ...pet,
+
+                // garante categorias novas
+                temperament: pet.temperament || "indefinido",
+
+                ageCategory,
+
+                goodWithKids: pet.goodWithKids ?? true,   // default seguro
+                goodWithPets: pet.goodWithPets ?? true
+            };
+        }
         // Banco de dados simulado (MOCK)
         const dbDogs = [
             {
@@ -602,7 +711,7 @@
                 name: "Tom",
                 age: "1 ano",
                 breed: "Gato SRD",
-                city: "Capão Bonito",   
+                city: "Capão Bonito",
                 species: "gato",
                 size: "pequeno",
                 medical: "Vacinado e castrado",
@@ -719,10 +828,33 @@
             }
         ];
 
-        // Estado do App
-        let dogsList = [...dbDogs];
-        let likedDogs = [];
 
+        let dogsList = [...dbDogs];
+
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function generatePetTraits(pet) {
+            const rng = seededRandom(pet.id);
+
+            // Categoriza a idade para o filtro inteligente
+            let ageCat = "adulto";
+            if (pet.age.includes("mes")) ageCat = "filhote";
+            if (parseInt(pet.age) > 7) ageCat = "idoso";
+
+            return {
+                ...pet,
+                ageCategory: ageCat,
+                goodWithPets: rng > 0.4, // 60% de chance de ser sociável
+                goodWithKids: seededRandom(pet.id * 3) > 0.3, // 70% de chance
+                // Temperamento baseado em porte ou aleatório
+                temperament: pet.temperament || (rng > 0.5 ? "brincalhão" : "calmo")
+            };
+        }
+
+        // Estado do App
         // Elementos DOM
         const cardsContainer = document.getElementById('cards-container');
         const emptyState = document.getElementById('empty-state');
@@ -737,16 +869,24 @@
         const navLikedBtn = document.getElementById('nav-liked');
 
         // Variáveis para física do Swipe
-        let isDragging = false;
-        let startX = 0, startY = 0, currentX = 0, currentY = 0;
-        let topCard = null;
 
+        document.addEventListener("DOMContentLoaded", () => {
+            initApp();
+        });
         // Inicialização
         function initApp() {
+            initData();
             setupNavigation();
             setupActionButtons();
         }
-        let userProfile = null;
+
+        function initData() {
+            let processedDogs = dbDogs
+                .map(enrichPet)
+                .map(generatePetTraits);
+
+            dogsList = [...processedDogs];
+        }
 
         // Cria a estrutura HTML de um cartão
         function createCardElement(dog, index) {
@@ -758,6 +898,10 @@
             card.addEventListener('click', () => {
                 showDetails(dog);
             });
+            const matchColor =
+                dog.matchScore >= 80 ? "bg-green-500" :
+                    dog.matchScore >= 60 ? "bg-yellow-400" :
+                        "bg-red-500";
 
             // Efeito visual 3D para as cartas de trás
             if (index > 0) {
@@ -770,6 +914,11 @@
                 <div class="stamp stamp-nope border-red-500 text-red-500">Passei</div>
                 
                 <!-- Imagem -->
+                <!-- MATCH SCORE -->
+                <div class="absolute top-3 left-3 bg-black/60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full ${matchColor}"></span>
+                    ${dog.matchScore}% compatível
+                </div>
                 <img src="${dog.img}" alt="${dog.name}" class="w-full h-full object-cover select-none pointer-events-none">
                 
                 <!-- Informações (Gradiente sobre a imagem) -->
@@ -794,7 +943,7 @@
             return card;
         }
 
-        let users = [];
+
 
         // Alternar entre login e cadastro
         function toggleAuth(type) {
@@ -837,6 +986,7 @@
             // Cria usuário
             const newUser = { email, password };
             users.push(newUser);
+            localStorage.setItem("users", JSON.stringify(users));
 
             // 🔥 LOGIN AUTOMÁTICO
             enterApp();
@@ -857,15 +1007,23 @@
             }
         }
         function saveProfile() {
-            userProfile = {
+            const profile = {
                 housing: document.getElementById('p-housing').value,
                 routine: document.getElementById('p-routine').value,
                 experience: document.getElementById('p-experience').value,
                 species: document.getElementById('p-species').value,
-                size: document.getElementById('p-size').value
+                size: document.getElementById('p-size').value,
+                activity: document.getElementById('p-activity').value,
+                age: document.getElementById('p-age').value,
+                temperament: document.getElementById('p-temperament').value,
+                allergy: document.getElementById('p-allergy').value,
+                kids: document.getElementById('p-kids').value,
+                otherPets: document.getElementById('p-otherPets').value
             };
 
-            localStorage.setItem('profile', JSON.stringify(userProfile));
+            localStorage.setItem('profile', JSON.stringify(profile));
+
+            userProfile = profile; // opcional, agora seguro
 
             document.getElementById('view-profile').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
@@ -874,19 +1032,60 @@
         }
 
         function applySmartFilters() {
-
-            dogsList = dbDogs.filter(dog => {
-
-                if (userProfile.species && dog.species !== userProfile.species)
-                    return false;
-
-                if (userProfile.size && dog.size !== userProfile.size)
-                    return false;
-
-                return true;
+            // Pegamos a base de dados original e aplicamos o cálculo baseado no perfil atual
+            const processedDogs = dbDogs.map(pet => {
+                const enriched = generatePetTraits(pet); // Gera os traços (kids/pets/temp)
+                return enrichWithMatch(userProfile, enriched); // Calcula a %
             });
 
+            // Ordena: os mais compatíveis aparecem primeiro
+            dogsList = processedDogs.sort((a, b) => b.matchScore - a.matchScore);
+
             renderCards();
+        }
+        // Função para abrir/fechar o menu de filtros
+        function toggleFilterMenu() {
+            const menu = document.getElementById('filter-menu');
+            const icon = document.getElementById('filter-icon');
+            const isOpen = !menu.classList.contains('hidden');
+
+            if (isOpen) {
+                menu.classList.add('hidden');
+                icon.classList.replace('ph-caret-up', 'ph-caret-down');
+            } else {
+                menu.classList.remove('hidden');
+                icon.classList.replace('ph-caret-down', 'ph-caret-up');
+            }
+        }
+
+        // Função de filtragem expandida
+        function applyFilters() {
+            const species = document.getElementById('filter-species').value;
+            const size = document.getElementById('filter-size').value;
+            const temp = document.getElementById('filter-temp').value;
+            const kidsOnly = document.getElementById('filter-kids').value === "true";
+
+            // Filtra a base de dados original
+            dogsList = dbDogs.filter(dog => {
+                // Primeiro enriquecemos o pet para ter os traços dinâmicos (kids/temp)
+                const enriched = generatePetTraits(dog);
+
+                const matchSpecies = !species || enriched.species === species;
+                const matchSize = !size || enriched.size === size;
+                const matchTemp = !temp || enriched.temperament === temp;
+                const matchKids = !kidsOnly || enriched.goodWithKids === true;
+
+                return matchSpecies && matchSize && matchTemp && matchKids;
+            });
+
+            // Recalcula o score baseado no perfil do usuário após filtrar
+            if (userProfile) {
+                dogsList = dogsList.map(pet => enrichWithMatch(userProfile, generatePetTraits(pet)));
+                dogsList.sort((a, b) => b.matchScore - a.matchScore);
+            }
+
+            renderCards();
+            toggleFilterMenu(); // Fecha o menu após aplicar
         }
 
         function showDetails(dog) {
@@ -947,13 +1146,39 @@
         function applyFilters() {
             const species = document.getElementById('filter-species').value;
             const size = document.getElementById('filter-size').value;
+            const temp = document.getElementById('filter-temp').value;
+            const kidsOnly = document.getElementById('filter-kids').value === "true";
 
-            dogsList = dbDogs.filter(dog => {
-                return (!species || dog.species === species) &&
-                    (!size || dog.size === size);
+            // 1. Filtramos a base bruta (dbDogs)
+            let filteredResults = dbDogs.filter(dog => {
+                // Importante: gerar os traços aqui para poder filtrar por temperamento/kids
+                const traits = generatePetTraits(dog);
+
+                const matchSpecies = !species || dog.species === species;
+                const matchSize = !size || dog.size === size;
+                const matchTemp = !temp || traits.temperament === temp;
+                const matchKids = !kidsOnly || traits.goodWithKids === true;
+
+                return matchSpecies && matchSize && matchTemp && matchKids;
             });
 
+            // 2. AGORA O SEGREDO: Transformamos os resultados filtrados em objetos compatíveis
+            // Isso garante que o matchScore seja calculado e não fique 'undefined'
+            dogsList = filteredResults.map(dog => {
+                const enrichedTraits = generatePetTraits(dog);
+                // userProfile é a variável global onde você salvou os dados do quiz
+                return enrichWithMatch(userProfile, enrichedTraits);
+            });
+
+            // 3. Ordenamos por compatibilidade
+            dogsList.sort((a, b) => b.matchScore - a.matchScore);
+
+            // 4. Resetamos o índice para começar do primeiro card da nova lista
+            currentCardIndex = 0;
+
+            // 5. Atualizamos a interface
             renderCards();
+            toggleFilterMenu(); // Fecha o dropdown
         }
 
         // --- LÓGICA DE DRAG & DROP (SWIPE) ---
@@ -1184,6 +1409,48 @@
                 navLikedBtn.classList.remove('text-gray-400');
                 navLikedBtn.classList.add('text-red-500');
             }
+        }
+
+        function calculateMatchScore(user, pet) {
+            let score = 20; // Base inicial de compatibilidade
+
+            // 1. ESPÉCIE (Peso Alto: 30pts)
+            if (user.species === "" || user.species === pet.species) {
+                score += 30;
+            }
+
+            // 2. PORTE vs MORADIA (Peso: 20pts)
+            if (user.housing === "apartamento" && pet.size === "pequeno") score += 20;
+            else if (user.housing === "casa_quintal" && pet.size === "grande") score += 20;
+            else if (user.size === pet.size) score += 20;
+            else score += 10; // Compatibilidade parcial
+
+            // 3. TEMPERAMENTO vs ATIVIDADE (Peso: 20pts)
+            if (user.activity === "ativo" && pet.temperament === "brincalhão") score += 20;
+            else if (user.activity === "sedentario" && pet.temperament === "calmo") score += 20;
+            else if (user.activity === "moderado") score += 15;
+
+            // 4. CRIANÇAS E OUTROS PETS (Peso: 20pts - Segurança)
+            if (user.kids === "sim" && pet.goodWithKids) score += 10;
+            if (user.otherPets === "sim" && pet.goodWithPets) score += 10;
+
+            // Se o usuário não tem kids/pets, ganha os pontos pois não há conflito
+            if (user.kids === "não") score += 10;
+            if (user.otherPets === "não") score += 10;
+
+            // 5. IDADE (Peso: 10pts)
+            if (user.age === "" || user.age === pet.ageCategory) score += 10;
+
+            return Math.min(score, 100);
+        }
+
+        function enrichWithMatch(user, pet) {
+            const score = calculateMatchScore(user, pet);
+
+            return {
+                ...pet,
+                matchScore: score
+            };
         }
 
         // Reinicia o app para testes
