@@ -1215,21 +1215,29 @@
         }
 
         function resetApp() {
+            // Reset all drag/gesture state BEFORE renderCards() runs,
+            // so that renderCards() can assign topCard freely and nothing
+            // overwrites it afterwards (the original bug: topCard = null
+            // was called after renderCards(), killing the swipe system).
+            isDragging = false;
+            dragActivatedOnCard = false;
+            currentX = 0;
+            currentY = 0;
+            topCard = null;
+
+            // Rebuild the full deck, preserving match-score sort order
+            // so "Ver Novamente" restores the same ranked experience.
             let processedDogs = dbDogs.map(enrichPet);
-            dogsList = processedDogs.map(dog => enrichWithMatch(userProfile, dog));
-            
+            dogsList = processedDogs
+                .map(dog => enrichWithMatch(userProfile, dog))
+                .sort((a, b) => b.matchScore - a.matchScore);
+
             likedDogs = [];
             updateLikedView();
             updateBadge();
             emptyState.classList.add('hidden');
             switchTab('swipe');
             renderCards();
-            
-            isDragging = false;
-            dragActivatedOnCard = false;
-            currentX = 0;
-            currentY = 0;
-            topCard = null;
         }
     </script>
 </body>
