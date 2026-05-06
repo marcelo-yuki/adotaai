@@ -102,6 +102,15 @@
         .toggle-checkbox:checked + .toggle-label {
             background-color: #f97316;
         }
+
+        /* Ensure the filter button and action buttons handle their own taps
+           independently of the card swipe system on both Android and iOS. */
+        #action-buttons button,
+        #filter-menu,
+        [onclick="toggleFilterMenu()"],
+        #filter-icon {
+            touch-action: manipulation;
+        }
     </style>
 </head>
 
@@ -906,11 +915,18 @@
             }
         }
 
+        // Flag to track whether a drag sequence was initiated on the card itself.
+        // This prevents touches that start on the filter panel, action buttons, or
+        // any other UI element from being misread as a card swipe gesture.
+        let dragActivatedOnCard = false;
+
         function setupDragEvents(card) {
             card.addEventListener('mousedown', handleDragStart);
             document.addEventListener('mousemove', handleDragMove);
             document.addEventListener('mouseup', handleDragEnd);
 
+            // Use the card element (not document) as the touchstart target so that
+            // only touches that begin directly on the card can start a drag sequence.
             card.addEventListener('touchstart', handleDragStart, { passive: false });
             document.addEventListener('touchmove', handleDragMove, { passive: false });
             document.addEventListener('touchend', handleDragEnd);
@@ -925,7 +941,18 @@
 
         function handleDragStart(e) {
             if (!topCard) return;
-            isDragging = false; 
+
+            // Guard: only allow a drag sequence when the touch/click originates
+            // inside the card itself. This stops the filter-panel arrow, action
+            // buttons, and any other overlapping element from accidentally
+            // triggering a swipe on both Android and iOS.
+            if (!topCard.contains(e.target)) {
+                dragActivatedOnCard = false;
+                return;
+            }
+
+            dragActivatedOnCard = true;
+            isDragging = false;
 
             const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
             const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
@@ -933,10 +960,15 @@
             startX = clientX;
             startY = clientY;
             topCard.style.transition = 'none';
+
+            // Stop the event from propagating to any ancestor that might also
+            // handle touch/scroll gestures (e.g. the filter panel or the page).
+            e.stopPropagation();
         }
 
         function handleDragMove(e) {
-            if (!topCard) return;
+            // Ignore move events that were not started on the card.
+            if (!topCard || !dragActivatedOnCard) return;
             
             const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
             const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
@@ -944,8 +976,12 @@
             currentX = clientX - startX;
             currentY = clientY - startY;
 
+            // Only lock in as a drag once the finger has moved a meaningful
+            // distance (dead-zone), distinguishing a tap from an intentional drag.
             if (Math.abs(currentX) > 10 || Math.abs(currentY) > 10) {
                 isDragging = true;
+                // Prevent the browser (Chrome/Safari) from simultaneously
+                // scrolling the page or triggering system-level swipe navigation.
                 if (e.type.includes('touch')) e.preventDefault();
             }
 
@@ -968,7 +1004,10 @@
         }
 
         function handleDragEnd() {
-            if (!topCard) return;
+            // Ignore end events that were not started on the card.
+            if (!topCard || !dragActivatedOnCard) return;
+
+            dragActivatedOnCard = false;
 
             if(!isDragging) {
                  resetCardPosition();
@@ -1187,6 +1226,7 @@
             renderCards();
             
             isDragging = false;
+            dragActivatedOnCard = false;
             currentX = 0;
             currentY = 0;
             topCard = null;
