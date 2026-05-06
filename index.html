@@ -139,15 +139,15 @@
         </div>
     </div>
 
-    <div id="view-profile" class="fixed inset-0 bg-white hidden z-50 flex-col overflow-hidden">
-        <div class="bg-white/80 backdrop-blur-md z-10 px-6 py-5 border-b border-gray-100 shadow-sm flex-shrink-0">
+    <div id="view-profile" class="fixed inset-0 bg-white hidden z-50 flex-col overflow-hidden w-full h-full">
+        <div class="bg-white/90 backdrop-blur-md z-10 px-6 py-5 border-b border-gray-100 shadow-sm flex-shrink-0">
             <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <i class="ph-fill ph-magic-wand text-orange-500"></i> Seu Perfil
             </h2>
             <p class="text-gray-500 text-sm mt-1">Responda para o match perfeito!</p>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 space-y-10 pb-32 no-scrollbar">
+        <div class="flex-1 min-h-0 overflow-y-auto overscroll-y-auto p-6 space-y-10 pb-32 no-scrollbar" style="touch-action: pan-y;">
             
             <div class="space-y-6">
                 <div class="flex items-center gap-3 border-b border-gray-100 pb-2">
@@ -208,7 +208,7 @@
                     <div>
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Idade</label>
                         <select id="p-age" class="w-full p-3 border-2 border-gray-100 rounded-xl bg-white text-gray-700 font-medium focus:outline-none focus:border-orange-500">
-                            <option value="">Qualquer Idade</option>
+                            <option value="">Qualquer</option>
                             <option value="filhote">Filhote</option>
                             <option value="adulto">Adulto</option>
                             <option value="idoso">Idoso</option>
@@ -217,7 +217,7 @@
                     <div>
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Temperamento</label>
                         <select id="p-temperament" class="w-full p-3 border-2 border-gray-100 rounded-xl bg-white text-gray-700 font-medium focus:outline-none focus:border-orange-500">
-                            <option value="">Qualquer um</option>
+                            <option value="">Qualquer</option>
                             <option value="calmo">Calmo</option>
                             <option value="brincalhao">Brincalhão</option>
                             <option value="independente">Independente</option>
@@ -315,7 +315,7 @@
                     <hr class="border-gray-200">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2 text-gray-700 font-medium">
-                            <i class="ph-fill ph-paw-print text-xl text-gray-400"></i> Já possui outros pets?
+                            <i class="ph-fill ph-paw-print text-xl text-gray-400"></i> Já tem outros pets?
                         </div>
                         <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
                             <input type="checkbox" id="p-otherPets" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform"/>
@@ -345,8 +345,8 @@
             </div>
         </div>
 
-        <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-white via-white/90 to-transparent z-20">
-            <button onclick="saveProfile()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-orange-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
+        <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-white via-white/90 to-transparent z-20 pointer-events-none">
+            <button onclick="saveProfile()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-orange-200 active:scale-95 transition-transform flex items-center justify-center gap-2 pointer-events-auto">
                 Encontrar meu match <i class="ph-bold ph-arrow-right"></i>
             </button>
         </div>
@@ -586,7 +586,6 @@
             { id: 3, name: "Thor", age: "4 anos", breed: "Pitbull", city: "Itararé", species: "cão", size: "grande", medical: "Castrado e vacinado", img: "https://media.istockphoto.com/id/1370010790/photo/pit-bull-dog-playing-and-having-fun-in-the-park-green-grass-wooden-stakes-around-selective.jpg?s=612x612&w=0&k=20&c=2BhKHzjGSTauuMVtrjEx6aDQrACAPV7iZ2ExQtxArzs=", desc: "Um gigante bobão. Muito preguiçoso e adora um sofá." },
             { id: 4, name: "Nina", age: "1 ano", breed: "Poodle Mix", city: "Barão de Antonina", species: "cão", size: "pequeno", medical: "Vacinada e saudável", img: "https://www.keystonepuppies.com/wp-content/uploads/2025/10/Poodle-Mix2.jpg", desc: "Pequenina, ideal para apartamento. Um pouco tímida no começo, mas depois é puro chamego." },
             { id: 6, name: "Mimi", age: "2 anos", breed: "Siamês", city: "Itapetininga", species: "gato", size: "pequeno", medical: "Vacinada e castrada", img: "https://static.wikia.nocookie.net/gatopedia/images/3/3a/Gato_Siam%C3%AAs.png/revision/latest?cb=20140429132749&path-prefix=pt-br", desc: "Carinhosa e tranquila. Ideal para apartamentos e pessoas que buscam companhia calma." }
-            // (Encurtei a lista visualmente aqui para focar no código principal, o resto dos dados continua o mesmo na lógica)
         ];
 
         let dogsList = [];
@@ -685,7 +684,6 @@
             document.getElementById('app').classList.add('hidden');
             document.getElementById('view-auth').classList.remove('hidden');
             
-            // Reseta inputs
             document.getElementById('login-email').value = '';
             document.getElementById('login-password').value = '';
             switchTab('swipe'); 
@@ -701,12 +699,12 @@
                 applySmartFilters();
             } else {
                 document.getElementById('view-profile').classList.remove('hidden');
+                document.getElementById('view-profile').classList.add('flex');
             }
         }
 
         // --- SISTEMA DE PERFIL DO USUÁRIO ---
-
-        // Utilitários para ler/escrever Radio Buttons e Checkboxes
+        
         function getRadioVal(name) {
             const el = document.querySelector(`input[name="${name}"]:checked`);
             return el ? el.value : "";
@@ -755,8 +753,9 @@
             document.getElementById('filter-menu').classList.add('hidden');
             document.getElementById('filter-icon').classList.replace('ph-caret-up', 'ph-caret-down');
             document.getElementById('app').classList.add('hidden');
+            
             document.getElementById('view-profile').classList.remove('hidden');
-            document.getElementById('view-profile').classList.add('flex'); // Necessário para o novo layout
+            document.getElementById('view-profile').classList.add('flex');
         }
 
         function saveProfile() {
@@ -843,7 +842,6 @@
             card.style.zIndex = dogsList.length - index;
 
             card.addEventListener('click', (e) => {
-                // Impede abrir modal se o usuário tentou arrastar
                 if(!isDragging) showDetails(dog);
             });
 
@@ -927,7 +925,6 @@
 
         function handleDragStart(e) {
             if (!topCard) return;
-            // Apenas flag pra drag real
             isDragging = false; 
 
             const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
@@ -947,7 +944,6 @@
             currentX = clientX - startX;
             currentY = clientY - startY;
 
-            // Define tolerância pra click vs drag
             if (Math.abs(currentX) > 10 || Math.abs(currentY) > 10) {
                 isDragging = true;
                 if (e.type.includes('touch')) e.preventDefault();
@@ -976,7 +972,7 @@
 
             if(!isDragging) {
                  resetCardPosition();
-                 return; // Foi um click limpo
+                 return;
             }
 
             topCard.style.transition = 'transform 0.3s ease-out';
@@ -990,7 +986,6 @@
                 resetCardPosition();
             }
 
-            // Reseta para o próximo click/drag
             setTimeout(() => { isDragging = false; }, 50); 
             currentX = 0;
             currentY = 0;
